@@ -1,5 +1,5 @@
-import express from 'express';
-import { Pool } from 'pg';
+import express, { json } from 'express';
+import { Pool, QueryResult } from 'pg';
 import fs from 'fs';
 import dotenv from 'dotenv';
 
@@ -45,26 +45,23 @@ const fillDatabase = async () => {
 
 const fillDevelopersTable = async () => {
   const data = JSON.parse(fs.readFileSync("members.json", "utf-8"));
-  for (const item of data) {
-    //check if the item already exists
-    const { rows } = await pool.query(
-      "SELECT * FROM developers WHERE id = $1",
-      [item.id]
-    );
-    if (rows.length === 0) {
-      await pool.query(
-        "INSERT INTO developers (id, name, reposlink, githublink) VALUES ($1, $2, $3, $4)",
-        [item.id, item.login, item.repos_url, item.html_url]
-      );
-    }
+
+  const currentDevs = await pool.query("SELECT * FROM developers");
+  const namesInDB: string[] = currentDevs.rows.map(row => row["name"]);
+  const namesFromAPI: string[] = data.map((obj: any) => obj.login);
+  const devsToAdd = namesFromAPI.filter(name => !namesInDB.includes(name));
+  const devsToRemove = namesInDB.filter(name => !namesFromAPI.includes(name));
+
+  for(const name of devsToRemove){
+    await pool.query("DELETE FROM developers WHERE name = $1", [name]);
+    console.log(`Deleted ${name}`);
   }
-  const { rows } = await pool.query("SELECT * FROM developers");
-  for (const row of rows) {
-    const item = data.find((i: any) => i.id === row.id);
-    if (!item) {
-      await pool.query("DELETE FROM developers WHERE id = $1", [row.id]);
-      console.log(`Deleted ${row.id}`);
-    }
+  for(const name of devsToAdd){
+    const dev = data.find((obj: any) => obj.login === name);
+    await pool.query(
+      "INSERT INTO developers (id, name, reposlink, githublink) VALUES ($1, $2, $3, $4)",
+      [dev.id, dev.login, dev.repos_url, dev.html_url]
+    );
   }
 };
 
