@@ -66,24 +66,37 @@ const fillDevelopersTable = async () => {
 };
 
 const fillRepositoriesTable = async () => {
-  const { rows } = await pool.query("SELECT * FROM developers"); 
+  const developers = await pool.query("SELECT * FROM developers"); 
   const repositories = await pool.query("SELECT * FROM repositories");
-  for (const row of rows) {
-    const { data } = await octokit.repos.listForUser({
-      username: row.name,
+  const owners:string[] = developers.rows.map(row => row.name);
+  const reposNamesDB:string[] = 
+  repositories.rows.map(row => row.name);
+
+  for (const owner of owners) {
+    const ownerReposDB:string[] = repositories.rows
+    .filter(row => row.developer === owner)
+    .map(row => row.name);
+    
+    const reposFromAPI = await octokit.repos.listForUser({
+      username: owner,
     });
-    for (const repo of data) {
-      //check if the repo already exists
-      const { rows } = await pool.query(
-        "SELECT * FROM repositories WHERE id = $1",
-        [repo.id]
+    
+    const ownerReposAPI:string[] = reposFromAPI.data
+    .map((repo: any) => repo.name);
+    const reposToAdd = ownerReposAPI.filter(name => !ownerReposDB.includes(name));
+    const reposToRemove = ownerReposDB.filter(name => !ownerReposAPI.includes(name));
+
+    for(const repo of reposToRemove){
+      await pool.query("DELETE FROM repositories WHERE name = $1", [repo]);
+      console.log(`Deleted ${repo}`);
+    }
+    for(const repo of reposToAdd){
+      const repoData = reposFromAPI.data.find((obj: any) => obj.name === repo);
+      await pool.query(
+        "INSERT INTO repositories (id, name, developer, languages_link, url) VALUES ($1, $2, $3, $4, $5)",
+        [repoData.id, repoData.name, owner, repoData.languages_url, repoData.html_url]
       );
-      if (rows.length === 0) {
-        await pool.query(
-          "INSERT INTO repositories (id, name, developer, languages_link, url) VALUES ($1, $2, $3, $4, $5)",
-          [repo.id, repo.name, row.name , repo.languages_url, repo.html_url]
-        );
-      }
+      console.log(`Added ${repo}`);
     }
   }
 };
