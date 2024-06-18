@@ -61,5 +61,3 @@ app.get("/members/p_language/:name", async (req, res) => {
   );
   res.json(rows);
 });
-
-//TODO: Sanitation of inputs, exceptions like C#, F#
