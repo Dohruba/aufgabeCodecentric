@@ -55,6 +55,10 @@ const fillDevelopersTable = async () => {
   for(const name of devsToRemove){
     await pool.query("DELETE FROM developers WHERE name = $1", [name]);
     console.log(`Deleted ${name}`);
+    await pool.query("DELETE FROM repositories WHERE developer = $1", [name]);
+    console.log(`Deleted ${name}'s repositories`);
+    await pool.query("UPDATE programminglanguages SET developers = array_remove(developers, $1)", [name]);
+    console.log(`Removed ${name} from languages`);
   }
   for(const name of devsToAdd){
     const dev = data.find((obj: any) => obj.login === name);
