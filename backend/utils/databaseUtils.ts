@@ -31,10 +31,7 @@ const fillDatabase = async () => {
     const members = await octokit.orgs.listMembers({
       org: "codecentric",
     });
-    console.log("api: ",members["data"]);
     const devsDataAPI = members["data"];
-    //JSON.parse(fs.readFileSync("members.json", "utf-8"));
-    console.log("file: ",devsDataAPI);
     const devNamesInAPI: string[] = devsDataAPI.map((obj: any) => obj.login);
   
     const devsDataDB = await pool.query("SELECT * FROM developers");
