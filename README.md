@@ -20,5 +20,6 @@ Eine .env-Datei ist im Backend-Verzeichnis erforderlich. Sie sollte die Informat
 
 ### Docker Befehle
 Aus dem **Backend**-Verzeichnis heraus ausführen:
+- Erstmal 'npm i' ausführen
 - docker build -t devs-backend-app .
 - docker-compose up -d
