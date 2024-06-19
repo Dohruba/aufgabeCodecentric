@@ -122,7 +122,6 @@ const fillDatabase = async () => {
 
     //Get languages for each repo and for each dev
     for (const dev of developerNamesOnDB) {
-      console.log("dev", dev);
       //Get all repos for the developer
       const devRepos = repositoriesOnDB.rows.filter((row) => {
         return row.developer === dev
@@ -131,7 +130,11 @@ const fillDatabase = async () => {
         const repoLangs:string[] = 
         await octokit.request(repo.languages_link)
           .then((res: any) => Object.keys(res.data));
-        for (const lang of repoLangs) {
+
+        for (let lang of repoLangs) {
+          if(lang.includes("#")) {
+            lang = lang.replace("#", "sharp");
+          }
           languagesFromAPI.add(lang);
           let langEntry = devLanguagesAPI.find((entry) => entry[0] === lang);
           if (!langEntry) {
@@ -164,8 +167,6 @@ const fillDatabase = async () => {
       return [lang, devs];
     }));
 
-    console.log("query",queryLanguages)
-    console.log("Languagesdevs", devLanguagesAPI)
     for(const [lang, devs] of queryLanguages){
       const updatedDevsAPI = devLanguagesAPI.find((entry) => entry[0] === lang);
       console.log("UpdatedDevsAPI", updatedDevsAPI);
