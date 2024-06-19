@@ -28,7 +28,13 @@ const fillDatabase = async () => {
   };
   
   const fillDevelopersTable = async () => {
-    const devsDataAPI = JSON.parse(fs.readFileSync("members.json", "utf-8"));
+    const members = await octokit.orgs.listMembers({
+      org: "codecentric",
+    });
+    console.log("api: ",members["data"]);
+    const devsDataAPI = members["data"];
+    //JSON.parse(fs.readFileSync("members.json", "utf-8"));
+    console.log("file: ",devsDataAPI);
     const devNamesInAPI: string[] = devsDataAPI.map((obj: any) => obj.login);
   
     const devsDataDB = await pool.query("SELECT * FROM developers");
@@ -46,6 +52,7 @@ const fillDatabase = async () => {
     }
     for (const name of devsToAdd) {
       const developer = devsDataAPI.find((obj: any) => obj.login === name);
+      if (developer)
       await pool.query(
         "INSERT INTO developers (id, name, reposlink, githublink) VALUES ($1, $2, $3, $4)",
         [developer.id, developer.login, developer.repos_url, developer.html_url]

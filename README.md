@@ -12,7 +12,7 @@ Um sicherzustellen, dass der richtige Name für die Programmiersprache für die 
 - /languages
 
 ### Testen der API
-Die Datei "PostmanAPITests.json" kann in Postman importiert werden. Die Sammlung kann ausgeführt werden, um die API zu testen.
+Die Datei "PostmanAPITests.json" kann in Postman importiert werden. Die Sammlung kann ausgeführt werden, um die API zu testen. **Um alle Tests korrekt laufen zu lassen, warten Sie bis es in der Log vom Backend "Database ready" steht.**
 
 ## Initialisierung des Containers
 ### .env Datei
