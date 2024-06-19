@@ -1,7 +1,9 @@
-import express, { json } from "express";
-import { Pool, QueryResult } from "pg";
+import express from "express";
+import { Pool} from "pg";
 import { fillDatabase } from "./databaseUtils"
 import dotenv from "dotenv";
+
+const args = process.argv.slice(2);
 
 dotenv.config();
 
@@ -13,7 +15,6 @@ const octokit = new Octokit({
   auth: process.env.TOKEN_SECRET,
   baseUrl: "https://api.github.com",
 });
-
 const pool = new Pool({
   user: process.env.POSTGRES_USER,
   host: process.env.POSTGRES_HOST,
@@ -30,10 +31,8 @@ app.use(express.json());
 
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
-  fillDatabase();
+if(args[0] !== 'false') fillDatabase();
 });
-
-
 
 app.get("/members", async (req, res) => {
   const { rows } = await pool.query("SELECT * FROM developers");
@@ -42,22 +41,20 @@ app.get("/members", async (req, res) => {
 
 app.get("/members/:id", async (req, res) => {
   const { id } = req.params;
-  const { rows } = await pool.query("SELECT * FROM developers WHERE id = $1", [
-    id,
-  ]);
+  const queryText = "SELECT * FROM developers WHERE id = $1";
+  const { rows } = await pool.query(queryText, [id]);
   res.json(rows);
 });
 
-app.get("languages", async (req, res) => {
-  const { rows } = await pool.query("SELECT * FROM programmingLanguages");
+app.get("/languages", async (req, res) => {
+  const queryText = "SELECT language FROM programmingLanguages";
+  const { rows } = await pool.query(queryText);
   res.json(rows);
 });
 
 app.get("/members/p_language/:name", async (req, res) => {
-  const { name } = req.params;
-  const { rows } = await pool.query(
-    "SELECT developers FROM programmingLanguages WHERE language = $1",
-    [name]
-  );
+  let { name } = req.params;
+  const queryText = "SELECT developers FROM programmingLanguages WHERE language = $1";
+  let { rows } = await pool.query(queryText, [name]);
   res.json(rows);
 });
