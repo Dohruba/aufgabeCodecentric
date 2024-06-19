@@ -24,7 +24,7 @@ const fillDatabase = async () => {
       .then(() => fillRepositoriesTable())
       .then(() => console.log("Filling Programming Languages"))
       .then(() => fillLanguagesTable())
-      .then(() => console.log("Database started"));
+      .then(() => console.log("Database ready"));
   };
   
   const fillDevelopersTable = async () => {
@@ -174,11 +174,9 @@ const fillDatabase = async () => {
       
       for (const dev of devsToAdd) {
         await pool.query("UPDATE programminglanguages SET developers = array_append(developers, $2) WHERE language = $1", [lang, dev]);
-        console.log(`Added ${dev} to ${lang}`);
       }
       for (const dev of devsToRemove) {
         await pool.query("UPDATE programminglanguages SET developers = array_remove(developers, $2) WHERE language = $1", [lang, dev]);
-        console.log(`Removed ${dev} from ${lang}`);
       }
     } 
 
